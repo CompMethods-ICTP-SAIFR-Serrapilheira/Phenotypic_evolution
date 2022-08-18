@@ -1,9 +1,10 @@
-manduca <- function(num.interactions, r, generations) {
+manduca <- function(num.interactions, r) {
 
   #Defining the initial variables
   # Number of interactions == num.interactions
   # Correlation between traits == r
-  # Number of generations == generations
+  # Number of generations
+  generations = 1000
   #Population sizes
   size.plants=600
   size.animals=600
