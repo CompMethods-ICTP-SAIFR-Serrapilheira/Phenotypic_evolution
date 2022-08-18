@@ -9,4 +9,8 @@ library(plyr)
 source("fct/manduca.R")
 
 # Generating the simulations
-manduca(1,1,100)
+manduca(1, 0.1)
+manduca(1, 0.5)
+manduca(1, 1)
+
+#.....................................
