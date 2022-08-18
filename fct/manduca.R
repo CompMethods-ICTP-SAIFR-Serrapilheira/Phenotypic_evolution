@@ -1,12 +1,12 @@
-manduca <- function(num.interactions = 1, r = 1, generations = 10) {
+manduca <- function(num.interactions, r, generations) {
 
   #Defining the initial variables
   # Number of interactions == num.interactions
   # Correlation between traits == r
   # Number of generations == generations
   #Population sizes
-  size.plants=200
-  size.animals=200
+  size.plants=600
+  size.animals=600
   #Mean of the traits
   media.z.inicial.i=0; media.op.inicial.i=0;
   media.z.inicial.j=0; media.op.inicial.j=0;
@@ -318,12 +318,13 @@ manduca <- function(num.interactions = 1, r = 1, generations = 10) {
                             nrow = round(table(mating.j.males$sex.animals)*0.05),
                             ncol = size.animals)
     # Transpose matrix
-    mothers.and.fathers <- as.data.frame(matrix.choice) %>% pivot_longer(cols = V1:V200,names_to = "mothers",
+    mothers.and.fathers <- as.data.frame(matrix.choice) %>% pivot_longer(cols = V1:V600,names_to = "mothers",
                                                   values_to = "fathers") # %>% filter(mothers == "V1")
     #Data frame with possible fathers
     possib.fathers <- right_join(mothers.and.fathers, mating.j.males %>% select(id.animals,op.animals), by = c("fathers" = "id.animals"))
+    possib.fathers <- possib.fathers %>% tidyr::drop_na()
 
-    #Select the fathers according to the maximum value os the sex trait
+    #Select the fathers according to the maximum value of the sex trait
     selected.fathers.animals <- lapply(X = unique(possib.fathers$mothers), FUN = function(chose.mother){
       father <- possib.fathers %>% filter(mothers == chose.mother) %>%
                     select(fathers, op.animals) %>% filter(op.animals == max(op.animals)) %>%
@@ -375,9 +376,4 @@ manduca <- function(num.interactions = 1, r = 1, generations = 10) {
 
     cat("nint=",num.interactions,"ksi=","current generation = ",step, "remaining =",generations-step,  "\n")
   }
-
-  #Fazer o grafico
-  #output.i<-read.table(file=paste("output.i",num.interactions,".Rtab",sep="_"),sep=";")
-  #output.j<-read.table(file=paste("output.j",num.interactions,".Rtab",sep="_"),sep=";")
-
 }
