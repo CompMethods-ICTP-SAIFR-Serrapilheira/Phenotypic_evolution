@@ -1,4 +1,4 @@
-manduca <- function(num.interactions, r) {
+manduca <- function(num.interactions, corr.j) {
 
   #Defining the initial variables
   # Number of interactions == num.interactions
@@ -71,12 +71,24 @@ manduca <- function(num.interactions, r) {
   # Create individuals
   p.generation<-rep(step,size.plants)
   p.id<-seq(((step*1000)+1):((step*1000)+size.plants))
-  p.ecological.trait<-rnorm(mean=media.z.inicial.j,sd=sd.z.inicial.j,n=size.plants)
-  p.op <- rnorm(mean=media.op.inicial.i,sd=sd.op.inicial.i,n=size.plants)
   p.sex <- as.vector(sample(levels.sex,size=size.plants,replace=TRUE))
   p.species <-rep("i",size.plants)
   p.father<-rep(0,size.plants)
   p.mother<-rep(0,size.plants)
+
+  # Create traits
+  # correlation matrix
+  corr.i=1
+  cor.mat.i<-matrix(c(1, corr.i, corr.i, 1), nrow=2)
+
+  # covariance matrix
+  traits.i = mvrnorm(n=size.plants, mu=c(media.z.inicial.i,media.op.inicial.i),
+                     Sigma=cor2cov(cor.mat.i,sd=c(sd.z.inicial.i,sd.op.inicial.i)))
+
+  ##Trait zA
+  p.ecological.trait = traits.i[, 1]
+  ##Trait oA
+  p.op = traits.i[, 2]
 
   # Data.frame of species i
   i <-data.frame(generation=p.generation,id=p.id,ecological.trait=p.ecological.trait,
@@ -99,11 +111,17 @@ manduca <- function(num.interactions, r) {
   q.mother<-rep(0,size.animals)
 
   # Create traits of j species
-  traits = mvrnorm(n=size.animals, mu=c(sd.z.inicial.j,sd.op.inicial.j),
-                   Sigma=matrix(c(1, r, r, 1), nrow=2), empirical=TRUE)
-  q.ecological.trait = traits[, 1]
-  q.op = traits[, 2]
-  #cor(q.ecological.trait,q.op)
+  #correlation matrix
+  cor.mat.j<-matrix(c(1, corr.j, corr.j, 1), nrow=2)
+
+  #covariance matrix
+  traits.j = mvrnorm(n=size.animals, mu=c(media.z.inicial.j,media.op.inicial.j),
+                     Sigma=cor2cov(cor.mat.j,sd=c(sd.z.inicial.j,sd.op.inicial.j) ))
+
+  ##Trait zA
+  q.ecological.trait = traits.j[, 1]
+  ##Trait oA
+  q.op = traits.j[, 2]
 
   j <-data.frame(generation=q.generation,id=q.id,ecological.trait=q.ecological.trait,
                  op=q.op,sex=q.sex,species=q.species,father=q.father,mother=q.mother)
@@ -112,9 +130,9 @@ manduca <- function(num.interactions, r) {
   j <- transform(j, generation=as.numeric(generation),id=as.numeric(id),ecological.trait = as.numeric(ecological.trait), op = as.numeric(op))
   #.....................................
   i.tab<-as.matrix(i)
-  write(t(i.tab),file=paste("output/output.i",num.interactions, r,generations, ".Rtab",sep="_"),append=TRUE,sep=";",ncolumns=dim(i)[2]);
+  write(t(i.tab),file=paste("output/output.i",num.interactions, corr.j,generations, ".Rtab",sep="_"),append=TRUE,sep=";",ncolumns=dim(i)[2]);
   j.tab<-as.matrix(j)
-  write(t(j.tab),file=paste("output/output.j",num.interactions, r, generations, ".Rtab",sep="_"),append=TRUE,sep=";",ncolumns=dim(j)[2]);
+  write(t(j.tab),file=paste("output/output.j",num.interactions, corr.j, generations, ".Rtab",sep="_"),append=TRUE,sep=";",ncolumns=dim(j)[2]);
   #=====================================
 
   for (step in 1:generations){
@@ -264,8 +282,16 @@ manduca <- function(num.interactions, r) {
     # Assortative mating choice for plants
     # Offspring without loop / i
     # Random error of offspring
-    random.segr.z <- sample(rnorm(mean=0,sd=sd.random.segr.z,n=size.plants))
-    random.segr.op <- sample(rnorm(mean=0,sd=sd.random.segr.op,n=size.plants))
+    # Create error
+    #matriz de correlacao
+    cor.mat.i<-matrix(c(1, corr.i, corr.i, 1), nrow=2)
+    #matriz de covariancia
+    erros.i = mvrnorm(n=size.plants, mu=c(media.z.inicial.i,media.op.inicial.i),
+                      Sigma=cor2cov(cor.mat.i,sd=c(sd.random.segr.z,sd.random.segr.op) ))
+    ##Erro zA
+    random.segr.z.i = erros.i[, 1]
+    ##Erro oA
+    random.segr.op.i = erros.i[, 2]
     #Mothers
     random.mother.i <- mating.i.females[sample(nrow(mating.i.females),size.plants,prob=p.mating.i.females,replace=TRUE),]
     # Mating choice by similar traits
@@ -289,8 +315,8 @@ manduca <- function(num.interactions, r) {
     #Offspring i
     o.generation <- rep(step,size.plants)
     o.id <- seq(((size.plants*step)+1),(size.plants*(step+1)))
-    o.ecological.trait <- (sum.z/2)+random.segr.z
-    o.op <- (sum.op/2)+random.segr.op
+    o.ecological.trait <- (sum.z/2)+random.segr.z.i
+    o.op <- (sum.op/2)+random.segr.op.i
     o.sex <- as.vector(sample(levels.sex,size=size.plants,replace=TRUE))
     o.species <- rep("i",size.plants)
     o.father <- selected.fathers.plants$id.plants
@@ -299,9 +325,17 @@ manduca <- function(num.interactions, r) {
 
     #Fisherian runaway process for animals
     #Offspring without loop / j
-    # Random error of offspring
-    random.segr.z<-sample(rnorm(mean=0,sd=sd.random.segr.z,n=size.animals))
-    random.segr.op<-sample(rnorm(mean=0,sd=sd.random.segr.op,n=size.animals))
+    # Error of offspring
+    #correlation matrix
+    cor.mat.j<-matrix(c(1, corr.j, corr.j, 1), nrow=2)
+
+    #covariance matrix
+    erros.j = mvrnorm(n=size.animals, mu=c(media.z.inicial.j,media.op.inicial.j),
+                      Sigma=cor2cov(cor.mat.j,sd=c(sd.random.segr.z,sd.random.segr.op) ))
+    ##Erro zB
+    random.segr.z.j = erros.j[, 1]
+    ##Erro oB
+    random.segr.op.j = erros.j[, 2]
 
     #Choose females according to probability of mating (Pmat)
     p.mating.mothers <- sample(mating.j.females$id.animals, size = size.animals, replace = T, prob = p.mating.j.females)
@@ -355,8 +389,8 @@ manduca <- function(num.interactions, r) {
     # Offspring j
     o.generation <- rep(step,size.animals)
     o.id <- seq(((size.animals*step)+1),(size.animals*(step+1)))
-    o.ecological.trait <- (sum.z/2)+random.segr.z
-    o.op <- (sum.op/2)+random.segr.op
+    o.ecological.trait <- (sum.z/2)+random.segr.z.j
+    o.op <- (sum.op/2)+random.segr.op.j
     o.sex <- as.vector(sample(levels.sex,size=size.animals,replace=TRUE))
     o.species <- rep("j",size.animals)
     o.father <- fathers.j$id.animals
@@ -370,9 +404,9 @@ manduca <- function(num.interactions, r) {
     names(offspring.i)->names.i
     names(offspring.j)->names.j
     offspring.i.tab<-as.matrix(offspring.i)
-    write(t(offspring.i.tab),file=paste("output/output.i",num.interactions, r, generations, ".Rtab",sep="_"),append=TRUE,sep=";",ncolumns=dim(offspring.i)[2])
+    write(t(offspring.i.tab),file=paste("output/output.i",num.interactions, corr.j, generations, ".Rtab",sep="_"),append=TRUE,sep=";",ncolumns=dim(offspring.i)[2])
     offspring.j.tab<-as.matrix(offspring.j)
-    write(t(offspring.j.tab),file=paste("output/output.j",num.interactions, r, generations, ".Rtab",sep="_"),append=TRUE,sep=";",ncolumns=dim(offspring.j)[2]);
+    write(t(offspring.j.tab),file=paste("output/output.j",num.interactions, corr.j, generations, ".Rtab",sep="_"),append=TRUE,sep=";",ncolumns=dim(offspring.j)[2]);
     #.............................
 
     cat("nint=",num.interactions,"ksi=","current generation = ",step, "remaining =",generations-step,  "\n")
