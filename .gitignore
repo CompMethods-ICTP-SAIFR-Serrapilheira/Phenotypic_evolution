@@ -4,8 +4,6 @@
 .RData
 .Ruserdata
 
-# ignoring all html in the repository
-*.html
 
 # all zip files
 *.zip
