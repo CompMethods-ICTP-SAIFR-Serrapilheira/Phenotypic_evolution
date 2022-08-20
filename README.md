@@ -14,7 +14,7 @@ To identify scenarios in which speciation is plausible as a result of the joint 
 
 We modified the adaptive diversification model by Raimundo et al. (2014) with a directional mating choice. The model simulates a life cycle of two interacting species (A and B), during this they experienced intraspecific competition, mutualism, reproduction and death, with no overlap of generations. The reproduction of species A is assortative and the species B is based on directional mating choice to see differences between the original model -- in which both species copulate via assortative mating. To run the simulations were used the packages: `MASS` `dplyr` `tidyr` `plyr`
 
-![Species life cycle](https://github.com/CompMethods-ICTP-SAIFR-Serrapilheira/Phenotypic_evolution/blob/main/figs/life_cycle.png){width=70%}
+![Species life cycle](https://github.com/CompMethods-ICTP-SAIFR-Serrapilheira/Phenotypic_evolution/blob/main/figs/life_cycle.png)
 
 
 ## Outputs
